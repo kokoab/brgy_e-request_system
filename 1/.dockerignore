@@ -1,0 +1,72 @@
+# ====================
+# Git
+# ====================
+.git
+.gitignore
+.gitattributes
+
+# ====================
+# Dependencies (will be installed in container)
+# ====================
+node_modules/
+vendor/
+
+# ====================
+# IDE / Editor
+# ====================
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# ====================
+# Documentation
+# ====================
+README.md
+CHANGELOG.md
+LICENSE
+docs/
+
+# ====================
+# Testing
+# ====================
+tests/
+coverage/
+.phpunit.result.cache
+*.spec.ts
+
+# ====================
+# Build artifacts
+# ====================
+dist/
+build/
+*.log
+
+# ====================
+# Environment files
+# ====================
+.env
+.env.*
+!.env.example
+
+# ====================
+# OS files
+# ====================
+.DS_Store
+Thumbs.db
+
+# ====================
+# Docker files (avoid recursion)
+# ====================
+docker-compose*.yml
+Dockerfile*
+.dockerignore
+
+# ====================
+# Misc
+# ====================
+*.md
+*.bak
+*.tmp
+

@@ -1,0 +1,14 @@
+version: "3.9"
+
+services:
+  angular:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: angular_app
+    ports:
+      - "4200:4200"
+    volumes:
+      - .:/usr/src/app
+      - /usr/src/app/node_modules
+    command: ["ng", "serve", "--host", "0.0.0.0", "--poll", "1000"]

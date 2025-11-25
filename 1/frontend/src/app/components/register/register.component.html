@@ -1,0 +1,84 @@
+<div class="auth-container">
+  <div class="auth-card">
+    <h2>Register</h2>
+    
+    <form (ngSubmit)="onSubmit()" #registerForm="ngForm">
+      <div class="form-group">
+        <label for="name">Name</label>
+        <input
+          type="text"
+          id="name"
+          name="name"
+          [(ngModel)]="name"
+          required
+          [disabled]="loading"
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="birthday">Birthday</label>
+        <input
+          type="date"
+          id="birthday"
+          name="birthday"
+          [(ngModel)]="birthday"
+          required
+          [disabled]="loading"
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="email">Email</label>
+        <input
+          type="email"
+          id="email"
+          name="email"
+          [(ngModel)]="email"
+          required
+          [disabled]="loading"
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input
+          type="password"
+          id="password"
+          name="password"
+          [(ngModel)]="password"
+          required
+          minlength="8"
+          [disabled]="loading"
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="passwordConfirmation">Confirm Password</label>
+        <input
+          type="password"
+          id="passwordConfirmation"
+          name="passwordConfirmation"
+          [(ngModel)]="passwordConfirmation"
+          required
+          [disabled]="loading"
+        />
+      </div>
+
+      <div *ngIf="error" class="error-message">
+        {{ error }}
+      </div>
+
+      <button 
+        type="submit" 
+        [disabled]="!registerForm.form.valid || loading"
+        class="btn-primary"
+      >
+        {{ loading ? 'Registering...' : 'Register' }}
+      </button>
+
+      <p class="auth-link">
+        Already have an account? <a routerLink="/login">Login here</a>
+      </p>
+    </form>
+  </div>
+</div>

@@ -1,0 +1,15 @@
+<div class="dashboard-container">
+  <header>
+    <h1>Dashboard</h1>
+    <button (click)="logout()" class="btn-logout">Logout</button>
+  </header>
+
+  <div class="user-info" *ngIf="authService.currentUser() as user">
+    <h2>Welcome, {{ user.name }}!</h2>
+    <p>Email: {{ user.email }}</p>
+  </div>
+
+  <div class="content">
+    <p>You are successfully authenticated!</p>
+  </div>
+</div>
