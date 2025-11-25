@@ -1,0 +1,220 @@
+<div class="admin-dashboard">
+  <h2>Admin Overview</h2>
+  <p class="subtitle">System statistics and recent activity</p>
+
+  <div *ngIf="error" class="error-message">{{ error }}</div>
+
+  <div *ngIf="loading" class="loading">Loading overview...</div>
+
+  <div *ngIf="!loading && stats" class="overview-content">
+    <!-- Statistics Cards -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-value">{{ stats.total_requests }}</div>
+        <div class="stat-label">Total Requests</div>
+      </div>
+      <div class="stat-card pending">
+        <div class="stat-value">{{ stats.pending_requests }}</div>
+        <div class="stat-label">Pending</div>
+      </div>
+      <div class="stat-card approved">
+        <div class="stat-value">{{ stats.approved_requests }}</div>
+        <div class="stat-label">Approved</div>
+      </div>
+      <div class="stat-card rejected">
+        <div class="stat-value">{{ stats.rejected_requests }}</div>
+        <div class="stat-label">Rejected</div>
+      </div>
+    </div>
+
+    <!-- User Statistics -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-value">{{ stats.total_users }}</div>
+        <div class="stat-label">Total Users</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">{{ stats.requestors }}</div>
+        <div class="stat-label">Requestors</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">{{ stats.staff }}</div>
+        <div class="stat-label">Staff</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">{{ stats.admins }}</div>
+        <div class="stat-label">Admins</div>
+      </div>
+    </div>
+
+    <!-- Recent Requests -->
+    <div class="recent-requests">
+      <h3>Recent Requests</h3>
+      <div *ngIf="recentRequests.length === 0" class="empty-state">
+        <p>No recent requests</p>
+      </div>
+      <div *ngIf="recentRequests.length > 0" class="requests-table">
+        <div class="table-header">
+          <div>Type</div>
+          <div>Requester</div>
+          <div>Status</div>
+          <div>Date</div>
+        </div>
+        <div *ngFor="let request of recentRequests" class="table-row">
+          <div>{{ request.document_type }}</div>
+          <div>{{ request.user?.name || 'Unknown' }}</div>
+          <div>
+            <span [class]="'status-badge ' + getStatusClass(request.document_status)">
+              {{ request.document_status }}
+            </span>
+          </div>
+          <div>{{ request.created_at | date:'short' }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .admin-dashboard {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .admin-dashboard h2 {
+    color: #333;
+    margin-bottom: 0.5rem;
+  }
+
+  .subtitle {
+    color: #666;
+    margin-bottom: 2rem;
+  }
+
+  .error-message {
+    background: #f8d7da;
+    color: #721c24;
+    padding: 1rem;
+    border-radius: 4px;
+    margin-bottom: 1rem;
+  }
+
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+  }
+
+  .stat-card {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    text-align: center;
+  }
+
+  .stat-card.pending {
+    border-left: 4px solid #ffc107;
+  }
+
+  .stat-card.approved {
+    border-left: 4px solid #28a745;
+  }
+
+  .stat-card.rejected {
+    border-left: 4px solid #dc3545;
+  }
+
+  .stat-value {
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 0.5rem;
+  }
+
+  .stat-label {
+    color: #666;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .recent-requests {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  }
+
+  .recent-requests h3 {
+    margin-top: 0;
+    color: #333;
+    margin-bottom: 1rem;
+  }
+
+  .requests-table {
+    display: grid;
+    gap: 0.5rem;
+  }
+
+  .table-header,
+  .table-row {
+    display: grid;
+    grid-template-columns: 2fr 2fr 1fr 2fr;
+    gap: 1rem;
+    padding: 0.75rem;
+    align-items: center;
+  }
+
+  .table-header {
+    background: #f8f9fa;
+    font-weight: 600;
+    color: #333;
+    border-radius: 4px;
+  }
+
+  .table-row {
+    border-bottom: 1px solid #eee;
+  }
+
+  .table-row:last-child {
+    border-bottom: none;
+  }
+
+  .status-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 12px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    text-transform: capitalize;
+    display: inline-block;
+  }
+
+  .status-pending {
+    background: #fff3cd;
+    color: #856404;
+  }
+
+  .status-approved {
+    background: #d4edda;
+    color: #155724;
+  }
+
+  .status-rejected {
+    background: #f8d7da;
+    color: #721c24;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 2rem;
+    color: #666;
+  }
+
+  .loading {
+    text-align: center;
+    padding: 2rem;
+    color: #666;
+  }
+</style>

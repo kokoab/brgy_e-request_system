@@ -28,6 +28,7 @@ class AuthController extends Controller
             'phone' => $request->phone,
             'email' => $request->email,
             'password' => Hash::make($request->password),
+            'role' => $request->role ?? User::ROLE_REQUESTOR, // Default to requestor
         ]);
 
         $token = $user->createToken('auth-token')->plainTextToken;

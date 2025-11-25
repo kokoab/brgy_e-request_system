@@ -1,0 +1,376 @@
+<div class="staff-dashboard">
+  <h2>Document Requests - Staff Review</h2>
+  <p class="subtitle">Review and approve/reject document requests</p>
+
+  <div *ngIf="error" class="error-message">{{ error }}</div>
+  <div *ngIf="success" class="success-message">{{ success }}</div>
+
+  <div *ngIf="loading && !documentRequests.length" class="loading">Loading...</div>
+
+  <div *ngIf="!loading && documentRequests.length === 0" class="empty-state">
+    <p>No pending document requests.</p>
+  </div>
+
+  <div *ngIf="documentRequests.length > 0" class="requests-list">
+    <div *ngFor="let request of documentRequests" class="request-card">
+      <div class="request-header">
+        <div>
+          <h3>{{ request.document_type }}</h3>
+          <p class="requester-info">Requested by: {{ request.user?.name || 'Unknown' }} ({{ request.user?.email }})</p>
+        </div>
+        <span [class]="'status-badge ' + getStatusClass(request.document_status)">
+          {{ request.document_status }}
+        </span>
+      </div>
+
+      <div class="request-details">
+        <div class="detail-row">
+          <strong>Name:</strong> {{ request.document_data.name }}
+        </div>
+        <div class="detail-row">
+          <strong>Email:</strong> {{ request.document_data.email }}
+        </div>
+        <div class="detail-row">
+          <strong>Phone:</strong> {{ request.document_data.phone }}
+        </div>
+        <div class="detail-row">
+          <strong>Birthday:</strong> {{ request.document_data.birthday }}
+        </div>
+        <div class="detail-row">
+          <strong>Requested:</strong> {{ request.created_at | date:'short' }}
+        </div>
+      </div>
+
+      <div *ngIf="request.document_status === 'pending'" class="request-actions">
+        <button 
+          (click)="openApproveModal(request.id)" 
+          [disabled]="loading"
+          class="btn-approve"
+        >
+          Approve
+        </button>
+        <button 
+          (click)="openRejectModal(request.id)" 
+          [disabled]="loading"
+          class="btn-reject"
+        >
+          Reject
+        </button>
+      </div>
+
+      <div *ngIf="request.staff_message && request.document_status !== 'pending'" class="staff-message">
+        <strong>Staff Message:</strong> {{ request.staff_message }}
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal for approve/reject with message -->
+  <div *ngIf="showModal" class="modal-overlay" (click)="closeModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>{{ actionType === 'approve' ? 'Approve' : 'Reject' }} Request</h3>
+        <button class="modal-close" (click)="closeModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p>Add an optional message for this {{ actionType === 'approve' ? 'approval' : 'rejection' }}:</p>
+        <textarea 
+          [(ngModel)]="message" 
+          placeholder="Enter your message here (optional)"
+          class="message-input"
+          rows="4"
+        ></textarea>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-cancel" (click)="closeModal()" [disabled]="loading">Cancel</button>
+        <button 
+          class="btn-submit" 
+          [class.btn-approve]="actionType === 'approve'"
+          [class.btn-reject]="actionType === 'reject'"
+          (click)="submitAction()" 
+          [disabled]="loading"
+        >
+          {{ loading ? 'Processing...' : (actionType === 'approve' ? 'Approve' : 'Reject') }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .staff-dashboard {
+    max-width: 1000px;
+    margin: 0 auto;
+  }
+
+  .staff-dashboard h2 {
+    color: #333;
+    margin-bottom: 0.5rem;
+  }
+
+  .subtitle {
+    color: #666;
+    margin-bottom: 2rem;
+  }
+
+  .error-message {
+    background: #f8d7da;
+    color: #721c24;
+    padding: 1rem;
+    border-radius: 4px;
+    margin-bottom: 1rem;
+  }
+
+  .success-message {
+    background: #d4edda;
+    color: #155724;
+    padding: 1rem;
+    border-radius: 4px;
+    margin-bottom: 1rem;
+  }
+
+  .requests-list {
+    display: grid;
+    gap: 1.5rem;
+  }
+
+  .request-card {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  }
+
+  .request-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #eee;
+  }
+
+  .request-header h3 {
+    margin: 0 0 0.5rem 0;
+    color: #333;
+  }
+
+  .requester-info {
+    margin: 0;
+    color: #666;
+    font-size: 0.9rem;
+  }
+
+  .status-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 12px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    text-transform: capitalize;
+  }
+
+  .status-pending {
+    background: #fff3cd;
+    color: #856404;
+  }
+
+  .status-approved {
+    background: #d4edda;
+    color: #155724;
+  }
+
+  .status-rejected {
+    background: #f8d7da;
+    color: #721c24;
+  }
+
+  .request-details {
+    margin-bottom: 1rem;
+  }
+
+  .detail-row {
+    margin-bottom: 0.5rem;
+    color: #666;
+  }
+
+  .request-actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid #eee;
+  }
+
+  .btn-approve {
+    background: #28a745;
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 500;
+  }
+
+  .btn-approve:hover:not(:disabled) {
+    background: #218838;
+  }
+
+  .btn-reject {
+    background: #dc3545;
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 500;
+  }
+
+  .btn-reject:hover:not(:disabled) {
+    background: #c82333;
+  }
+
+  .btn-approve:disabled,
+  .btn-reject:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 3rem;
+    color: #666;
+  }
+
+  .loading {
+    text-align: center;
+    padding: 2rem;
+    color: #666;
+  }
+
+  .staff-message {
+    margin-top: 1rem;
+    padding: 0.75rem;
+    background: #f8f9fa;
+    border-left: 3px solid #007bff;
+    border-radius: 4px;
+    color: #495057;
+  }
+
+  .staff-message strong {
+    color: #333;
+  }
+
+  /* Modal Styles */
+  .modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+  }
+
+  .modal-content {
+    background: white;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 500px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem;
+    border-bottom: 1px solid #eee;
+  }
+
+  .modal-header h3 {
+    margin: 0;
+    color: #333;
+  }
+
+  .modal-close {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: #666;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+  }
+
+  .modal-close:hover {
+    background: #f5f5f5;
+  }
+
+  .modal-body {
+    padding: 1.5rem;
+  }
+
+  .modal-body p {
+    margin: 0 0 1rem 0;
+    color: #666;
+  }
+
+  .message-input {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-family: inherit;
+    font-size: 0.9rem;
+    resize: vertical;
+    box-sizing: border-box;
+  }
+
+  .message-input:focus {
+    outline: none;
+    border-color: #007bff;
+  }
+
+  .modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    padding: 1.5rem;
+    border-top: 1px solid #eee;
+  }
+
+  .btn-cancel {
+    background: #6c757d;
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 500;
+  }
+
+  .btn-cancel:hover:not(:disabled) {
+    background: #5a6268;
+  }
+
+  .btn-submit {
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 500;
+    color: white;
+  }
+
+  .btn-submit:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+</style>

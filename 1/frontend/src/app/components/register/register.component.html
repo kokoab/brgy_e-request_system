@@ -13,6 +13,9 @@
           required
           [disabled]="loading"
         />
+        <div *ngIf="errors['name']" class="field-error">
+          <div *ngFor="let error of errors['name']">{{ error }}</div>
+        </div>
       </div>
 
       <div class="form-group">
@@ -25,6 +28,25 @@
           required
           [disabled]="loading"
         />
+        <div *ngIf="errors['birthday']" class="field-error">
+          <div *ngFor="let error of errors['birthday']">{{ error }}</div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="phone">Phone <span style="color: red;">*</span></label>
+        <input
+          type="tel"
+          id="phone"
+          name="phone"
+          [(ngModel)]="phone"
+          placeholder="Enter your phone number"
+          required
+          [disabled]="loading"
+        />
+        <div *ngIf="errors['phone']" class="field-error">
+          <div *ngFor="let error of errors['phone']">{{ error }}</div>
+        </div>
       </div>
 
       <div class="form-group">
@@ -37,6 +59,9 @@
           required
           [disabled]="loading"
         />
+        <div *ngIf="errors['email']" class="field-error">
+          <div *ngFor="let error of errors['email']">{{ error }}</div>
+        </div>
       </div>
 
       <div class="form-group">
@@ -50,6 +75,9 @@
           minlength="8"
           [disabled]="loading"
         />
+        <div *ngIf="errors['password']" class="field-error">
+          <div *ngFor="let error of errors['password']">{{ error }}</div>
+        </div>
       </div>
 
       <div class="form-group">
@@ -62,6 +90,9 @@
           required
           [disabled]="loading"
         />
+        <div *ngIf="errors['password']" class="field-error">
+          <div *ngFor="let error of errors['password']">{{ error }}</div>
+        </div>
       </div>
 
       <div *ngIf="error" class="error-message">
@@ -82,3 +113,15 @@
     </form>
   </div>
 </div>
+
+<style>
+  .field-error {
+    color: #dc3545;
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+  }
+
+  .field-error div {
+    margin-top: 0.125rem;
+  }
+</style>

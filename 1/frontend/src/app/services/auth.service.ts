@@ -8,6 +8,9 @@ export interface User {
   id: number;
   name: string;
   email: string;
+  role: 'requestor' | 'staff' | 'admin';
+  phone?: string;
+  birthday?: string;
 }
 
 export interface AuthResponse {
@@ -31,13 +34,14 @@ export class AuthService {
     this.checkAuth();
   }
 
-  register(name: string, birthday: string, phone: string, email: string, password: string): Observable<AuthResponse> {
+  register(name: string, birthday: string, phone: string, email: string, password: string, passwordConfirmation: string): Observable<AuthResponse> {
     return this.http.post<AuthResponse>(`${this.apiUrl}/register`, {
       name,
       birthday,
       phone,
       email,
-      password
+      password,
+      password_confirmation: passwordConfirmation
     }).pipe(
       tap(response => this.handleAuthResponse(response))
     );
@@ -93,5 +97,23 @@ export class AuthService {
 
   getToken(): string | null {
     return localStorage.getItem('auth_token');
+  }
+
+  // Role helper methods
+  isRequestor(): boolean {
+    return this.currentUser()?.role === 'requestor';
+  }
+
+  isStaff(): boolean {
+    return this.currentUser()?.role === 'staff';
+  }
+
+  isAdmin(): boolean {
+    return this.currentUser()?.role === 'admin';
+  }
+
+  isStaffOrAdmin(): boolean {
+    const role = this.currentUser()?.role;
+    return role === 'staff' || role === 'admin';
   }
 }

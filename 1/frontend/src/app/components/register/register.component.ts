@@ -18,6 +18,7 @@ export class RegisterComponent {
   password = '';
   passwordConfirmation = '';
   error = '';
+  errors: { [key: string]: string[] } = {};
   loading = false;
 
   constructor(
@@ -28,19 +29,27 @@ export class RegisterComponent {
   onSubmit(): void {
     this.loading = true;
     this.error = '';
+    this.errors = {};
 
     this.authService.register(
       this.name,
       this.birthday,
       this.phone,
       this.email,
-      this.password
+      this.password,
+      this.passwordConfirmation
     ).subscribe({
       next: () => {
         this.router.navigate(['/dashboard']);
       },
       error: (err) => {
-        this.error = err.error.message || 'Registration failed';
+        if (err.error?.errors) {
+          // Laravel validation errors
+          this.errors = err.error.errors;
+          this.error = 'Please fix the validation errors below';
+        } else {
+          this.error = err.error?.message || 'Registration failed';
+        }
         this.loading = false;
       }
     });
