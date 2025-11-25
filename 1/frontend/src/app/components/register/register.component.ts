@@ -31,9 +31,10 @@ export class RegisterComponent {
 
     this.authService.register(
       this.name,
+      this.birthday,
+      this.phone,
       this.email,
-      this.password,
-      this.passwordConfirmation
+      this.password
     ).subscribe({
       next: () => {
         this.router.navigate(['/dashboard']);

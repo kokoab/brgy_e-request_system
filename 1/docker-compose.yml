@@ -12,7 +12,7 @@ services:
       - "4200:4200"
     volumes:
       - ./frontend:/usr/src/app
-      - /usr/src/app/node_modules
+      - angular_node_modules:/usr/src/app/node_modules
     command: ["ng", "serve", "--host", "0.0.0.0", "--poll", "1000", "--proxy-config", "proxy.conf.json"]
     networks:
       - app-network
@@ -84,4 +84,6 @@ networks:
 # Volumes
 volumes:
   dbdata:
+    driver: local
+  angular_node_modules:
     driver: local
