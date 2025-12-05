@@ -116,25 +116,4 @@ export class AuthService {
     const role = this.currentUser()?.role;
     return role === 'staff' || role === 'admin';
   }
-
-  updateProfile(data: {
-    name?: string;
-    birthday?: string;
-    phone?: string;
-    email?: string;
-  }): Observable<{ user: User; message: string }> {
-    return this.http.put<{ user: User; message: string }>(`${this.apiUrl}/profile`, data).pipe(
-      tap(response => {
-        this.currentUser.set(response.user);
-      })
-    );
-  }
-
-  changePassword(currentPassword: string, newPassword: string, newPasswordConfirmation: string): Observable<{ message: string }> {
-    return this.http.post<{ message: string }>(`${this.apiUrl}/change-password`, {
-      current_password: currentPassword,
-      password: newPassword,
-      password_confirmation: newPasswordConfirmation
-    });
-  }
 }

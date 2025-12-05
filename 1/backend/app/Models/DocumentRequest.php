@@ -9,7 +9,6 @@ class DocumentRequest extends Model
     protected $fillable = [
         'user_id',
         'document_type',
-        'description',
         'document_data',
         'document_status',
         'staff_message',

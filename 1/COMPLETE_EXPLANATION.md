@@ -225,14 +225,6 @@ These check the user's role easily.
 
 #### DocumentRequest Model (`app/Models/DocumentRequest.php`)
 ```php
-protected $fillable = [
-    'user_id',
-    'document_type',
-    'document_data',
-    'document_status',
-    'staff_message',  // Optional message from staff
-];
-
 protected $casts = [
     'document_data' => 'array',
 ];
@@ -242,8 +234,6 @@ protected $casts = [
 - `document_data` is stored as JSON in database
 - Laravel automatically converts: array ↔ JSON
 - You work with arrays in code, database stores JSON
-- `staff_message` is a fillable field (can be mass-assigned)
-- `staff_message` is nullable (optional field)
 
 ### 2. CONTROLLERS (Handle Requests)
 
@@ -373,79 +363,9 @@ public function index(Request $request)
 
 **Key Features:**
 - **Same endpoint, different data** based on user role
-- **Ordered by date:** Newest requests appear first (`orderBy('created_at', 'desc')`)
+- **Ordered by date:** Newest requests appear first
 - **Eager loading:** Includes user relationship (avoids N+1 query problem)
 - **Selective fields:** Only loads needed user fields (id, name, email)
-- **Includes staff_message:** Returns staff messages if they exist
-
-**Approve Method:**
-```php
-public function approve(Request $request)
-{
-    $user = $request->user();
-    
-    // Only staff can approve
-    if (!$user->isStaff()) {
-        return response()->json([
-            'message' => 'Only staff members can approve document requests'
-        ], 403);
-    }
-
-    $request->validate([
-        'document_request_id' => 'required|exists:document_requests,id',
-        'message' => 'nullable|string|max:1000',  // Optional message
-    ]);
-
-    $documentRequest = DocumentRequest::find($request->document_request_id);
-    $documentRequest->update([
-        'document_status' => 'approved',
-        'staff_message' => $request->input('message')  // Can be NULL
-    ]);
-    
-    return response()->json([
-        'message' => 'Document request approved successfully',
-        'data' => $documentRequest->load('user:id,name,email')
-    ]);
-}
-```
-
-**Reject Method:**
-```php
-public function reject(Request $request)
-{
-    $user = $request->user();
-    
-    // Only staff can reject
-    if (!$user->isStaff()) {
-        return response()->json([
-            'message' => 'Only staff members can reject document requests'
-        ], 403);
-    }
-
-    $request->validate([
-        'document_request_id' => 'required|exists:document_requests,id',
-        'message' => 'nullable|string|max:1000',  // Optional message
-    ]);
-
-    $documentRequest = DocumentRequest::find($request->document_request_id);
-    $documentRequest->update([
-        'document_status' => 'rejected',
-        'staff_message' => $request->input('message')  // Can be NULL
-    ]);
-    
-    return response()->json([
-        'message' => 'Document request rejected successfully',
-        'data' => $documentRequest->load('user:id,name,email')
-    ]);
-}
-```
-
-**Key Features of Approve/Reject:**
-- **Role check:** Only staff can approve/reject (checked at middleware and controller level)
-- **Optional message:** Staff can include a message (max 1000 characters)
-- **Message storage:** Saved to `staff_message` field in database
-- **Message visibility:** Visible to requestors on their dashboard
-- **Status update:** Changes `document_status` to 'approved' or 'rejected'
 
 ### 3. MIDDLEWARE (Run Code Before/After Requests)
 
@@ -491,7 +411,6 @@ Route::middleware('auth:sanctum')->group(function () {
     // Staff only
     Route::middleware('role:staff')->group(function () {
         Route::post('/document-request/approve', [DocumentRequestController::class, 'approve']);
-        Route::post('/document-request/reject', [DocumentRequestController::class, 'reject']);
     });
     
     // Admin only
@@ -545,17 +464,6 @@ Schema::table('document_requests', function (Blueprint $table) {
 - **Purpose:** Store optional messages from staff when approving/rejecting
 
 **Migration file:** `2025_11_26_000000_add_staff_message_to_document_requests_table.php`
-
-**To run the migration:**
-```bash
-# If using Docker
-docker-compose exec -T app php artisan migrate
-
-# Or if running locally
-php artisan migrate
-```
-
-**Important:** This migration must be run before using the approve/reject with message feature. The `staff_message` column must exist in the database.
 
 ---
 
@@ -999,14 +907,6 @@ export class StaffDashboardComponent implements OnInit {
 - **Real-time Updates:** List refreshes after actions
 
 **Modal Workflow:**
-1. Staff clicks "Approve" or "Reject" button on a pending request
-2. Modal opens with textarea for optional message
-3. Staff can enter a message (max 1000 characters) or leave it blank
-4. Staff clicks "Approve" or "Reject" button in modal footer
-5. Request is processed with optional message
-6. Modal closes and list refreshes
-7. Staff message appears on the request card (if provided)
-8. Requestor can see the message on their dashboard
 1. Staff clicks "Approve" or "Reject" button
 2. Modal opens with textarea for optional message
 3. Staff can enter message or leave blank
@@ -1393,7 +1293,7 @@ Frontend:
 ```
 Requestor Dashboard:
 1. Requestor refreshes or navigates back
-2. Sees updated status and staff message (if provided)
+2. Sees updated status and staff message
 
 Frontend:
 - RequestorDashboardComponent.loadRequests()
@@ -1408,12 +1308,6 @@ Backend:
 - Returns filtered requests with staff_message field
 
 Frontend:
-- Displays requests ordered by newest first
-- Shows status badge (pending/approved/rejected)
-- If staff_message exists and status is not pending:
-  - Displays staff message in a highlighted box
-  - Shows message below request details
-  - Helps requestor understand approval/rejection reason
 - Displays requests (newest first)
 - Status badge shows "approved" (green) or "rejected" (red)
 - If staff_message exists and status is not pending:
@@ -1487,54 +1381,11 @@ public function approve(Request $request) {
         return response()->json(['message' => 'Unauthorized'], 403);
     }
     
-    // Validate input
-    $request->validate([
-        'document_request_id' => 'required|exists:document_requests,id',
-        'message' => 'nullable|string|max:1000',  // Optional staff message
-    ]);
-    
-    // Update request with status and optional message
-    $documentRequest = DocumentRequest::find($request->document_request_id);
-    $documentRequest->update([
-        'document_status' => 'approved',
-        'staff_message' => $request->input('message')  // Can be NULL
-    ]);
-    
-    return response()->json([
-        'message' => 'Document request approved successfully',
-        'data' => $documentRequest->load('user:id,name,email')
-    ]);
-}
-
-public function reject(Request $request) {
-    $user = $request->user();
-    
-    if (!$user->isStaff()) {
-        return response()->json(['message' => 'Unauthorized'], 403);
-    }
-    
-    $request->validate([
-        'document_request_id' => 'required|exists:document_requests,id',
-        'message' => 'nullable|string|max:1000',  // Optional staff message
-    ]);
-    
-    $documentRequest = DocumentRequest::find($request->document_request_id);
-    $documentRequest->update([
-        'document_status' => 'rejected',
-        'staff_message' => $request->input('message')  // Can be NULL
-    ]);
-    
-    return response()->json([
-        'message' => 'Document request rejected successfully',
-        'data' => $documentRequest->load('user:id,name,email')
-    ]);
+    // Proceed with approval
 }
 ```
 - Even if route allows, controller verifies
 - Prevents accidental access
-- **Message parameter:** Optional, max 1000 characters
-- **Message storage:** Saved to `staff_message` field in database
-- **Message visibility:** Visible to requestors on their dashboard
 
 **4. Backend Data Filtering (Same Endpoint, Different Data)**
 ```php
@@ -1780,11 +1631,9 @@ $user->save();
 - Create requests with document type
 - Automatic capture of user information (name, email, phone, birthday)
 - Status tracking (pending → approved/rejected)
-- **Staff messages:** Optional messages when approving/rejecting (max 1000 characters)
-- **Ordered display:** Requests shown newest first (ordered by `created_at DESC`)
-- **Staff message display:** Messages visible to both staff and requestors
-- **Message storage:** Saved to `staff_message` field in database (nullable TEXT column)
-- **Backend validation:** Message is optional, nullable, string, max 1000 characters
+- **Staff messages:** Optional messages when approving/rejecting
+- **Ordered display:** Requests shown newest first
+- **Staff message display:** Messages visible to requestors
 
 ### 3. Enhanced Authentication
 - Password confirmation validation
@@ -1809,28 +1658,17 @@ $user->save();
 
 ### 6. UI/UX Improvements
 - **Modal system:** Professional modal dialogs for approve/reject
-  - Opens when staff clicks Approve/Reject button
-  - Includes textarea for optional message input
-  - Prevents accidental clicks (must confirm action in modal)
-  - Click outside modal or X button to close
-  - Modal shows action type (Approve/Reject) in header
-  - Submit button changes color based on action (green for approve, red for reject)
+  - Opens when staff clicks Approve/Reject
+  - Includes textarea for optional message
+  - Prevents accidental clicks (must confirm in modal)
+  - Click outside or X button to close
 - **Optional messages:** Textarea for staff to add notes (max 1000 chars)
-  - Message is optional (can be left blank)
-  - Validated on backend (nullable, string, max 1000 characters)
-  - Stored in `staff_message` database field
 - **Message display:** Staff messages shown on approved/rejected requests
   - Visible to requestors on their dashboard
-  - Visible to staff on staff dashboard
-  - Displayed in highlighted box with border
   - Helps explain approval/rejection decisions
-  - Only shown when status is not 'pending' and message exists
 - **Better feedback:** Success/error messages with auto-dismiss (3 seconds)
 - **Status badges:** Color-coded (pending=yellow, approved=green, rejected=red)
 - **Ordered lists:** Newest requests appear first for better UX
-  - Backend orders by `created_at DESC`
-  - Ensures most recent requests are at the top
-  - Applies to both requestor and staff dashboards
 
 ### 7. Database Schema Updates
 - **staff_message field:** Added to document_requests table
