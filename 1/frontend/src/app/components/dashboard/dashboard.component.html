@@ -4,7 +4,10 @@
     <div class="user-info" *ngIf="authService.currentUser() as user">
       <span>Welcome, {{ user.name }} ({{ user.role }})</span>
     </div>
-    <button (click)="logout()" class="btn-logout">Logout</button>
+    <div class="header-actions">
+      <a routerLink="/profile" class="btn-profile">My Profile</a>
+      <button (click)="logout()" class="btn-logout">Logout</button>
+    </div>
   </header>
 
   <div class="content">
@@ -41,6 +44,25 @@
 
   .user-info {
     color: #666;
+  }
+
+  .header-actions {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+  }
+
+  .btn-profile {
+    background: #007bff;
+    color: white;
+    text-decoration: none;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+
+  .btn-profile:hover {
+    background: #0056b3;
   }
 
   .btn-logout {

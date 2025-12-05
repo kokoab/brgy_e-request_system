@@ -8,16 +8,29 @@
   <div *ngIf="showRequestForm" class="request-form">
     <h3>Create New Document Request</h3>
     <div class="form-group">
-      <label>Document Type:</label>
-      <input 
-        type="text" 
+      <label>Document Type: <span class="required">*</span></label>
+      <select 
         [(ngModel)]="documentType" 
-        placeholder="e.g., Clearance, Certificate, etc."
         class="form-control"
-      />
+        required
+      >
+        <option value="">Select document type...</option>
+        <option *ngFor="let type of documentTypes" [value]="type">{{ type }}</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Description (Optional):</label>
+      <textarea 
+        [(ngModel)]="description" 
+        placeholder="Add any additional details about your request..."
+        class="form-control"
+        rows="4"
+        maxlength="2000"
+      ></textarea>
+      <small class="char-count">{{ description.length }}/2000 characters</small>
     </div>
     <div class="form-actions">
-      <button (click)="submitRequest()" [disabled]="loading" class="btn-primary">
+      <button (click)="submitRequest()" [disabled]="loading || !documentType" class="btn-primary">
         {{ loading ? 'Submitting...' : 'Submit Request' }}
       </button>
       <button (click)="showRequestForm = false" class="btn-secondary">Cancel</button>
@@ -25,11 +38,40 @@
   </div>
 
   <div *ngIf="error" class="error-message">{{ error }}</div>
+  <div *ngIf="success" class="success-message">{{ success }}</div>
+
+  <!-- Search and Filters -->
+  <div class="filters-section">
+    <div class="search-bar">
+      <input 
+        type="text" 
+        [(ngModel)]="searchTerm" 
+        (keyup.enter)="onSearch()"
+        placeholder="Search by type, description, or keywords..."
+        class="search-input"
+      />
+      <button (click)="onSearch()" class="btn-search">Search</button>
+    </div>
+    <div class="filter-row">
+      <select [(ngModel)]="statusFilter" (change)="onFilterChange()" class="filter-select">
+        <option value="">All Statuses</option>
+        <option value="pending">Pending</option>
+        <option value="approved">Approved</option>
+        <option value="rejected">Rejected</option>
+        <option value="cancelled">Cancelled</option>
+      </select>
+      <select [(ngModel)]="documentTypeFilter" (change)="onFilterChange()" class="filter-select">
+        <option value="">All Document Types</option>
+        <option *ngFor="let type of documentTypes" [value]="type">{{ type }}</option>
+      </select>
+      <button (click)="clearFilters()" class="btn-clear-filters">Clear Filters</button>
+    </div>
+  </div>
 
   <div *ngIf="loading && !documentRequests.length" class="loading">Loading...</div>
 
   <div *ngIf="!loading && documentRequests.length === 0" class="empty-state">
-    <p>No document requests yet. Create your first request!</p>
+    <p>No document requests found. Create your first request!</p>
   </div>
 
   <div *ngIf="documentRequests.length > 0" class="requests-list">
@@ -45,12 +87,47 @@
         <p *ngIf="request.document_status !== 'pending'">
           <strong>Updated:</strong> {{ request.updated_at | date:'short' }}
         </p>
+        <p *ngIf="request.description">
+          <strong>Description:</strong> {{ request.description }}
+        </p>
       </div>
 
       <div *ngIf="request.staff_message" class="staff-message">
         <strong>Staff Message:</strong> {{ request.staff_message }}
       </div>
+
+      <div *ngIf="request.document_status === 'pending'" class="request-actions">
+        <button 
+          (click)="cancelRequest(request.id)" 
+          [disabled]="loading"
+          class="btn-cancel-request"
+        >
+          Cancel Request
+        </button>
+      </div>
     </div>
+  </div>
+
+  <!-- Pagination -->
+  <div *ngIf="pagination && pagination.last_page > 1" class="pagination">
+    <button 
+      (click)="goToPage(pagination!.current_page - 1)" 
+      [disabled]="pagination.current_page === 1"
+      class="page-btn"
+    >
+      Previous
+    </button>
+    <span class="page-info">
+      Page {{ pagination.current_page }} of {{ pagination.last_page }}
+      ({{ pagination.total }} total)
+    </span>
+    <button 
+      (click)="goToPage(pagination!.current_page + 1)" 
+      [disabled]="pagination.current_page === pagination.last_page"
+      class="page-btn"
+    >
+      Next
+    </button>
   </div>
 </div>
 
@@ -209,5 +286,149 @@
 
   .staff-message strong {
     color: #333;
+  }
+
+  .required {
+    color: #dc3545;
+  }
+
+  .char-count {
+    display: block;
+    margin-top: 0.25rem;
+    color: #666;
+    font-size: 0.875rem;
+  }
+
+  .filters-section {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    margin-bottom: 2rem;
+  }
+
+  .search-bar {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .search-input {
+    flex: 1;
+    padding: 0.75rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 1rem;
+  }
+
+  .btn-search {
+    background: #007bff;
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+
+  .btn-search:hover {
+    background: #0056b3;
+  }
+
+  .filter-row {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .filter-select {
+    padding: 0.75rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    min-width: 150px;
+  }
+
+  .btn-clear-filters {
+    background: #6c757d;
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+
+  .btn-clear-filters:hover {
+    background: #5a6268;
+  }
+
+  .success-message {
+    background: #d4edda;
+    color: #155724;
+    padding: 1rem;
+    border-radius: 4px;
+    margin-bottom: 1rem;
+  }
+
+  .status-cancelled {
+    background: #e2e3e5;
+    color: #383d41;
+  }
+
+  .request-actions {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid #eee;
+  }
+
+  .btn-cancel-request {
+    background: #dc3545;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.875rem;
+  }
+
+  .btn-cancel-request:hover:not(:disabled) {
+    background: #c82333;
+  }
+
+  .btn-cancel-request:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  .pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+    margin-top: 2rem;
+    padding: 1rem;
+  }
+
+  .page-btn {
+    background: #007bff;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+
+  .page-btn:hover:not(:disabled) {
+    background: #0056b3;
+  }
+
+  .page-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  .page-info {
+    color: #666;
+    font-size: 0.9rem;
   }
 </style>

@@ -5,12 +5,31 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\DocumentRequest;
 use App\Models\User;
+
 class DocumentRequestController extends Controller
 {
+    // Available document types
+    public static function getDocumentTypes(): array
+    {
+        return [
+            'Clearance Certificate',
+            'Residence Certificate',
+            'Indigency Certificate'
+        ];
+    }
+
+    public function getDocumentTypesEndpoint()
+    {
+        return response()->json([
+            'document_types' => self::getDocumentTypes()
+        ]);
+    }
+
     public function store(Request $request)
     {
         $request->validate([
-            'document_type' => 'required|string'
+            'document_type' => 'required|string|in:' . implode(',', self::getDocumentTypes()),
+            'description' => 'nullable|string|max:2000'
         ]);
 
         $user = $request->user();
@@ -25,6 +44,7 @@ class DocumentRequestController extends Controller
         $documentRequest = DocumentRequest::create([
             'user_id' => $user->id,
             'document_type' => $request->document_type,
+            'description' => $request->input('description'),
             'document_data' => $documentData,
         ]);
         return response()->json($documentRequest, 201);
@@ -34,21 +54,68 @@ class DocumentRequestController extends Controller
     {
         $user = $request->user();
         
+        $query = DocumentRequest::query();
+        
         // Requestors see only their requests, Staff/Admin see all
         if ($user->isRequestor()) {
-            $documentRequests = DocumentRequest::where('user_id', $user->id)
-                ->with('user:id,name,email')
-                ->orderBy('created_at', 'desc')
-                ->get();
-        } else {
-            // Staff and Admin see all requests - newest first
-            $documentRequests = DocumentRequest::with('user:id,name,email,role')
-                ->orderBy('created_at', 'desc')
-                ->get();
+            $query->where('user_id', $user->id);
         }
         
+        // Search functionality
+        if ($request->has('search') && $request->search) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('document_type', 'like', "%{$search}%")
+                  ->orWhere('description', 'like', "%{$search}%")
+                  ->orWhereHas('user', function($userQuery) use ($search) {
+                      $userQuery->where('name', 'like', "%{$search}%")
+                                ->orWhere('email', 'like', "%{$search}%");
+                  });
+            });
+        }
+        
+        // Filter by status
+        if ($request->has('status') && $request->status) {
+            $query->where('document_status', $request->status);
+        }
+        
+        // Filter by document type
+        if ($request->has('document_type') && $request->document_type) {
+            $query->where('document_type', $request->document_type);
+        }
+        
+        // Date range filter
+        if ($request->has('date_from') && $request->date_from) {
+            $query->whereDate('created_at', '>=', $request->date_from);
+        }
+        if ($request->has('date_to') && $request->date_to) {
+            $query->whereDate('created_at', '<=', $request->date_to);
+        }
+        
+        // Eager load user relationship
+        if ($user->isRequestor()) {
+            $query->with('user:id,name,email');
+        } else {
+            $query->with('user:id,name,email,role');
+        }
+        
+        // Order by newest first
+        $query->orderBy('created_at', 'desc');
+        
+        // Pagination
+        $perPage = $request->get('per_page', 15);
+        $documentRequests = $query->paginate($perPage);
+        
         return response()->json([
-            'data' => $documentRequests,
+            'data' => $documentRequests->items(),
+            'pagination' => [
+                'current_page' => $documentRequests->currentPage(),
+                'last_page' => $documentRequests->lastPage(),
+                'per_page' => $documentRequests->perPage(),
+                'total' => $documentRequests->total(),
+                'from' => $documentRequests->firstItem(),
+                'to' => $documentRequests->lastItem(),
+            ],
             'message' => 'Document requests fetched successfully'
         ]);
     }
@@ -105,6 +172,39 @@ class DocumentRequestController extends Controller
         
         return response()->json([
             'message' => 'Document request rejected successfully',
+            'data' => $documentRequest->load('user:id,name,email')
+        ]);
+    }
+
+    public function cancel(Request $request)
+    {
+        $user = $request->user();
+        
+        $request->validate([
+            'document_request_id' => 'required|exists:document_requests,id',
+        ]);
+
+        $documentRequest = DocumentRequest::find($request->document_request_id);
+        
+        // Only the owner can cancel, and only if pending
+        if ($documentRequest->user_id !== $user->id) {
+            return response()->json([
+                'message' => 'You can only cancel your own requests'
+            ], 403);
+        }
+        
+        if ($documentRequest->document_status !== 'pending') {
+            return response()->json([
+                'message' => 'Only pending requests can be cancelled'
+            ], 400);
+        }
+        
+        $documentRequest->update([
+            'document_status' => 'cancelled'
+        ]);
+        
+        return response()->json([
+            'message' => 'Document request cancelled successfully',
             'data' => $documentRequest->load('user:id,name,email')
         ]);
     }

@@ -14,9 +14,17 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/user', [AuthController::class, 'user']);
 
+    // Profile management
+    Route::put('/profile', [AuthController::class, 'updateProfile']);
+    Route::post('/change-password', [AuthController::class, 'changePassword']);
+
+    // Document types endpoint (public for authenticated users)
+    Route::get('/document-types', [DocumentRequestController::class, 'getDocumentTypesEndpoint']);
+
     // Requestor routes - anyone authenticated can request documents
     Route::post('/document-request', [DocumentRequestController::class, 'store']);
     Route::get('/document-requests', [DocumentRequestController::class, 'index']);
+    Route::post('/document-request/cancel', [DocumentRequestController::class, 'cancel']);
 
     // Staff routes - only staff can approve/reject
     Route::middleware('role:staff')->group(function () {
