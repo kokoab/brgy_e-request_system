@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
+import { HttpErrorResponse } from '@angular/common/http';
 import { AuthService } from '../../services/auth.service';
 
 @Component({
@@ -42,13 +43,18 @@ export class RegisterComponent {
       next: () => {
         this.router.navigate(['/dashboard']);
       },
-      error: (err) => {
+      error: (err: HttpErrorResponse) => {
+        console.error('Registration error:', err);
         if (err.error?.errors) {
           // Laravel validation errors
           this.errors = err.error.errors;
           this.error = 'Please fix the validation errors below';
+        } else if (err.error?.message) {
+          this.error = err.error.message;
+        } else if (err.message) {
+          this.error = err.message;
         } else {
-          this.error = err.error?.message || 'Registration failed';
+          this.error = 'Registration failed. Please check your connection and try again.';
         }
         this.loading = false;
       }
