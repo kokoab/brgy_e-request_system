@@ -1,18 +1,54 @@
 <div class="staff-dashboard">
-  <h2>Document Requests - Staff Review</h2>
+  <h2 class="margin-top-20">Document Requests - Staff Review</h2>
   <p class="subtitle">Review and approve/reject document requests</p>
 
   <div *ngIf="error" class="error-message">{{ error }}</div>
   <div *ngIf="success" class="success-message">{{ success }}</div>
 
+  <!-- Filter Buttons -->
+  <div *ngIf="documentRequests.length > 0" class="filter-buttons">
+    <button
+      (click)="setFilter('all')"
+      [class.active]="selectedFilter === 'all'"
+      class="filter-btn"
+    >
+      All
+    </button>
+    <button
+      (click)="setFilter('pending')"
+      [class.active]="selectedFilter === 'pending'"
+      class="filter-btn"
+    >
+      Pending
+    </button>
+    <button
+      (click)="setFilter('approved')"
+      [class.active]="selectedFilter === 'approved'"
+      class="filter-btn"
+    >
+      Approved
+    </button>
+    <button
+      (click)="setFilter('rejected')"
+      [class.active]="selectedFilter === 'rejected'"
+      class="filter-btn"
+    >
+      Rejected
+    </button>
+  </div>
+
   <div *ngIf="loading && !documentRequests.length" class="loading">Loading...</div>
 
   <div *ngIf="!loading && documentRequests.length === 0" class="empty-state">
-    <p>No pending document requests.</p>
+    <p>No document requests.</p>
   </div>
 
-  <div *ngIf="documentRequests.length > 0" class="requests-list">
-    <div *ngFor="let request of documentRequests" class="request-card">
+  <div *ngIf="!loading && documentRequests.length > 0 && filteredRequests.length === 0" class="empty-state">
+    <p>No {{ selectedFilter }} requests found.</p>
+  </div>
+
+  <div *ngIf="filteredRequests.length > 0" class="requests-list">
+    <div *ngFor="let request of filteredRequests" class="request-card">
       <div class="request-header">
         <div>
           <h3>{{ request.document_type }}</h3>
@@ -46,15 +82,15 @@
       </div>
 
       <div *ngIf="request.document_status === 'pending'" class="request-actions">
-        <button 
-          (click)="openApproveModal(request.id)" 
+        <button
+          (click)="openApproveModal(request.id)"
           [disabled]="loading"
           class="btn-approve"
         >
           Approve
         </button>
-        <button 
-          (click)="openRejectModal(request.id)" 
+        <button
+          (click)="openRejectModal(request.id)"
           [disabled]="loading"
           class="btn-reject"
         >
@@ -89,8 +125,8 @@
       </div>
       <div class="modal-body">
         <p>Add an optional message for this {{ actionType === 'approve' ? 'approval' : 'rejection' }}:</p>
-        <textarea 
-          [(ngModel)]="message" 
+        <textarea
+          [(ngModel)]="message"
           placeholder="Enter your message here (optional)"
           class="message-input"
           rows="4"
@@ -98,11 +134,11 @@
       </div>
       <div class="modal-footer">
         <button class="btn-cancel" (click)="closeModal()" [disabled]="loading">Cancel</button>
-        <button 
-          class="btn-submit" 
+        <button
+          class="btn-submit"
           [class.btn-approve]="actionType === 'approve'"
           [class.btn-reject]="actionType === 'reject'"
-          (click)="submitAction()" 
+          (click)="submitAction()"
           [disabled]="loading"
         >
           {{ loading ? 'Processing...' : (actionType === 'approve' ? 'Approve' : 'Reject') }}
@@ -120,7 +156,13 @@
 
   .staff-dashboard h2 {
     color: #333;
+    margin-top: 0;
     margin-bottom: 0.5rem;
+    padding-top: 3rem;
+  }
+
+  .margin-top-20 {
+    margin-top: 1.5rem;
   }
 
   .subtitle {
@@ -144,6 +186,41 @@
     margin-bottom: 1rem;
   }
 
+  .filter-buttons {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+  }
+
+  .filter-btn {
+    padding: 0.625rem 1.25rem;
+    border: 2px solid #e0e0e0;
+    background: white;
+    color: #666;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  }
+
+  .filter-btn:hover {
+    border-color: #495057;
+    color: #495057;
+    background: #f8f9fa;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  }
+
+  .filter-btn.active {
+    background: #495057;
+    color: white;
+    border-color: #495057;
+    box-shadow: 0 2px 8px rgba(73, 80, 87, 0.2);
+  }
+
   .requests-list {
     display: grid;
     gap: 1.5rem;
@@ -152,8 +229,15 @@
   .request-card {
     background: white;
     padding: 1.5rem;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    transition: all 0.3s ease;
+    border: 1px solid #f0f0f0;
+  }
+
+  .request-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 30px rgba(0,0,0,0.12);
   }
 
   .request-header {

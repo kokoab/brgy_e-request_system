@@ -52,6 +52,38 @@
 
   <div *ngIf="error" class="error-message">{{ error }}</div>
 
+  <!-- Filter Buttons -->
+  <div *ngIf="documentRequests.length > 0" class="filter-buttons">
+    <button
+      (click)="setFilter('all')"
+      [class.active]="selectedFilter === 'all'"
+      class="filter-btn"
+    >
+      All
+    </button>
+    <button
+      (click)="setFilter('pending')"
+      [class.active]="selectedFilter === 'pending'"
+      class="filter-btn"
+    >
+      Pending
+    </button>
+    <button
+      (click)="setFilter('approved')"
+      [class.active]="selectedFilter === 'approved'"
+      class="filter-btn"
+    >
+      Approved
+    </button>
+    <button
+      (click)="setFilter('rejected')"
+      [class.active]="selectedFilter === 'rejected'"
+      class="filter-btn"
+    >
+      Rejected
+    </button>
+  </div>
+
   <div *ngIf="loading && !documentRequests.length" class="loading">
     Loading...
   </div>
@@ -60,8 +92,12 @@
     <p>No document requests yet. Create your first request!</p>
   </div>
 
-  <div *ngIf="documentRequests.length > 0" class="requests-list">
-    <div *ngFor="let request of documentRequests" class="request-card">
+  <div *ngIf="!loading && documentRequests.length > 0 && filteredRequests.length === 0" class="empty-state">
+    <p>No {{ selectedFilter }} requests found.</p>
+  </div>
+
+  <div *ngIf="filteredRequests.length > 0" class="requests-list">
+    <div *ngFor="let request of filteredRequests" class="request-card">
       <div class="request-header">
         <h3>{{ request.document_type }}</h3>
         <span
@@ -94,25 +130,33 @@
   .requestor-dashboard {
     max-width: 800px;
     margin: 0 auto;
+    padding-bottom: 4%;
   }
 
   .requestor-dashboard h2 {
     color: #333;
+    margin-top: 0;
     margin-bottom: 1.5rem;
+
+    padding-top: 4%;
   }
 
   .btn-primary {
-    background: #007bff;
+    background: #495057;
     color: white;
     border: none;
     padding: 0.75rem 1.5rem;
-    border-radius: 4px;
+    border-radius: 8px;
     cursor: pointer;
     margin-bottom: 1.5rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
   }
 
   .btn-primary:hover:not(:disabled) {
-    background: #0056b3;
+    background: #343a40;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   }
 
   .btn-primary:disabled {
@@ -160,8 +204,8 @@
 
   .form-control:focus {
     outline: none;
-    border-color: #007bff;
-    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+    border-color: #495057;
+    box-shadow: 0 0 0 3px rgba(73, 80, 87, 0.1);
   }
 
   select.form-control {
@@ -198,6 +242,41 @@
     margin-bottom: 1rem;
   }
 
+  .filter-buttons {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+  }
+
+  .filter-btn {
+    padding: 0.625rem 1.25rem;
+    border: 2px solid #e0e0e0;
+    background: white;
+    color: #666;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  }
+
+  .filter-btn:hover {
+    border-color: #495057;
+    color: #495057;
+    background: #f8f9fa;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  }
+
+  .filter-btn.active {
+    background: #495057;
+    color: white;
+    border-color: #495057;
+    box-shadow: 0 2px 8px rgba(73, 80, 87, 0.2);
+  }
+
   .requests-list {
     display: grid;
     gap: 1rem;
@@ -206,8 +285,15 @@
   .request-card {
     background: white;
     padding: 1.5rem;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease;
+    border: 1px solid #f0f0f0;
+  }
+
+  .request-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
   }
 
   .request-header {

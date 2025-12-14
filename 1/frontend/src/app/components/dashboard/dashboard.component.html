@@ -16,47 +16,89 @@
 
     <!-- Admin Dashboard -->
     <app-admin-dashboard *ngIf="authService.isAdmin()"></app-admin-dashboard>
+
+    <!-- Loading state if authenticated but user not loaded yet -->
+    <div *ngIf="authService.isAuthenticated() && !authService.currentUser()" class="loading-state">
+      <p>Loading dashboard...</p>
+    </div>
   </div>
 </div>
 
 <style>
   .dashboard-container {
-    min-height: 100vh;
-    background: #f5f5f5;
+    min-height: calc(100vh - 120px);
+    background: transparent;
   }
 
   header {
     background: white;
-    padding: 1rem 2rem;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    padding: 1.5rem 2rem;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
     display: flex;
     justify-content: space-between;
     align-items: center;
+    border-radius: 12px;
+    margin-bottom: 2rem;
+    transition: box-shadow 0.3s ease;
+  }
+
+  header:hover {
+    box-shadow: 0 6px 25px rgba(0,0,0,0.12);
   }
 
   header h1 {
     margin: 0;
-    color: #333;
+    color: #2c3e50;
+    font-size: 1.75rem;
+    font-weight: 600;
   }
 
   .user-info {
-    color: #666;
+    color: #495057;
+    font-weight: 500;
+    margin: 0 1rem;
+  }
+
+  .user-info span {
+    color: #495057;
   }
 
   .btn-logout {
     background: #dc3545;
     color: white;
     border: none;
-    padding: 0.5rem 1rem;
-    border-radius: 4px;
+    padding: 0.625rem 1.5rem;
+    border-radius: 8px;
     cursor: pointer;
+    font-weight: 500;
+    transition: all 0.3s ease;
   }
 
   .btn-logout:hover {
     background: #c82333;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+  }
+
+  .btn-logout:active {
+    transform: translateY(0);
   }
 
   .content {
-    padding: 2rem;
+    padding: 0;
+  }
+
+  .loading-state {
+    text-align: center;
+    padding: 4rem 2rem;
+    color: #666;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  }
+
+  .loading-state p {
+    font-size: 1.1rem;
+    color: #495057;
   }
 </style>

@@ -11,10 +11,12 @@ import { DocumentRequestService, DocumentRequest } from '../../../services/docum
 })
 export class StaffDashboardComponent implements OnInit {
   documentRequests: DocumentRequest[] = [];
+  filteredRequests: DocumentRequest[] = [];
   loading = false;
   error = '';
   success = '';
   downloadingId: number | null = null; // Track which document is downloading
+  selectedFilter: 'all' | 'pending' | 'approved' | 'rejected' = 'all';
   
   // Modal state
   showModal = false;
@@ -34,6 +36,7 @@ export class StaffDashboardComponent implements OnInit {
     this.documentService.getRequests().subscribe({
       next: (response) => {
         this.documentRequests = response.data;
+        this.applyFilter();
         this.loading = false;
       },
       error: (err) => {
@@ -41,6 +44,21 @@ export class StaffDashboardComponent implements OnInit {
         this.loading = false;
       }
     });
+  }
+
+  setFilter(filter: 'all' | 'pending' | 'approved' | 'rejected'): void {
+    this.selectedFilter = filter;
+    this.applyFilter();
+  }
+
+  applyFilter(): void {
+    if (this.selectedFilter === 'all') {
+      this.filteredRequests = this.documentRequests;
+    } else {
+      this.filteredRequests = this.documentRequests.filter(
+        request => request.document_status === this.selectedFilter
+      );
+    }
   }
 
   openApproveModal(requestId: number): void {
