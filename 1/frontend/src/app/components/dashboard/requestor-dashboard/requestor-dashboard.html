@@ -12,18 +12,34 @@
   <div *ngIf="showRequestForm" class="request-form">
     <h3>Create New Document Request</h3>
     <div class="form-group">
-      <label>Document Type:</label>
-      <input
-        type="text"
+      <label>Document Type: <span class="required">*</span></label>
+      <select
         [(ngModel)]="documentType"
-        placeholder="e.g., Clearance, Certificate, etc."
         class="form-control"
-      />
+        required
+      >
+        <option value="">-- Select Document Type --</option>
+        <option value="clearance">Barangay Clearance</option>
+        <option value="indigency">Certificate of Indigency</option>
+        <option value="residence">Certificate of Residence</option>
+        <option value="recognition">Certificate of Recognition</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Message (Optional):</label>
+      <textarea
+        [(ngModel)]="message"
+        placeholder="Add any additional information or notes..."
+        class="form-control"
+        rows="4"
+        maxlength="1000"
+      ></textarea>
+      <small class="char-count">{{ message.length }}/1000 characters</small>
     </div>
     <div class="form-actions">
       <button
         (click)="submitRequest()"
-        [disabled]="loading"
+        [disabled]="loading || !documentType"
         class="btn-primary"
       >
         {{ loading ? 'Submitting...' : 'Submit Request' }}
@@ -61,6 +77,10 @@
         <p *ngIf="request.document_status !== 'pending'">
           <strong>Updated:</strong> {{ request.updated_at | date:'short' }}
         </p>
+      </div>
+
+      <div *ngIf="request.requestor_message" class="requestor-message">
+        <strong>Your Message:</strong> {{ request.requestor_message }}
       </div>
 
       <div *ngIf="request.staff_message" class="staff-message">
@@ -135,6 +155,34 @@
     border: 1px solid #ddd;
     border-radius: 4px;
     font-size: 1rem;
+    font-family: inherit;
+  }
+
+  .form-control:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+  }
+
+  select.form-control {
+    cursor: pointer;
+    background-color: white;
+  }
+
+  textarea.form-control {
+    resize: vertical;
+    min-height: 100px;
+  }
+
+  .required {
+    color: #dc3545;
+  }
+
+  .char-count {
+    display: block;
+    margin-top: 0.25rem;
+    color: #666;
+    font-size: 0.875rem;
   }
 
   .form-actions {
@@ -214,16 +262,29 @@
     color: #666;
   }
 
-  .staff-message {
+  .requestor-message {
     margin-top: 1rem;
     padding: 0.75rem;
-    background: #f8f9fa;
+    background: #e7f3ff;
     border-left: 3px solid #007bff;
     border-radius: 4px;
     color: #495057;
   }
 
+  .requestor-message strong {
+    color: #0056b3;
+  }
+
+  .staff-message {
+    margin-top: 1rem;
+    padding: 0.75rem;
+    background: #f8f9fa;
+    border-left: 3px solid #28a745;
+    border-radius: 4px;
+    color: #495057;
+  }
+
   .staff-message strong {
-    color: #333;
+    color: #155724;
   }
 </style>
