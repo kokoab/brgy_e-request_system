@@ -216,6 +216,8 @@ class DocumentRequestController extends Controller
             // Set PDF options
             $pdf->setPaper('A4', 'portrait');
             $pdf->setOption('enable-local-file-access', true);
+            $pdf->setOption('isRemoteEnabled', true);
+            $pdf->setOption('isHtml5ParserEnabled', true);
 
             // Generate filename
             $filename = str_replace(' ', '-', strtolower($documentRequest->document_type))
