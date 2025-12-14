@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Barangay Clearance Certificate</title>
+    <title>Barangay Recognition Certificate</title>
     <style>
         @page {
             margin: 15mm 20mm;
@@ -188,7 +188,7 @@
 
         <!-- Certificate Title -->
         <div class="certificate-title">
-            Certificate of Clearance
+            Certificate of Recognition
         </div>
 
         <!-- Main Content -->

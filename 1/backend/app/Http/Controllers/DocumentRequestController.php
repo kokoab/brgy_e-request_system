@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\DocumentRequest;
 use App\Models\User;
+use Barryvdh\DomPDF\Facade\Pdf;
+
 class DocumentRequestController extends Controller
 {
     public function store(Request $request)
@@ -145,5 +147,97 @@ class DocumentRequestController extends Controller
         ]);
     }
 
-}
+    public function downloadPdf(Request $request, $id)
+    {
+        // Find the document request
+        $documentRequest = DocumentRequest::with('user')->find($id);
 
+        // Check if document request exists
+        if (!$documentRequest) {
+            return response()->json([
+                'message' => 'Document request not found'
+            ], 404);
+        }
+
+        // Check authorization:
+        // - Requestor can only download their own approved documents
+        // - Staff and Admin can download any approved document
+        $user = $request->user();
+
+        if ($user->isRequestor() && $documentRequest->user_id !== $user->id) {
+            return response()->json([
+                'message' => 'You are not authorized to download this document'
+            ], 403);
+        }
+
+        // Only allow download for approved documents
+        if ($documentRequest->document_status !== 'approved') {
+            return response()->json([
+                'message' => 'Document must be approved before downloading'
+            ], 400);
+        }
+
+        // Determine template based on document type using switch statement
+        // This allows different templates for different document types
+        // IMPORTANT: Make sure you create the template files before using them!
+        switch (strtolower($documentRequest->document_type)) {
+            case 'clearance':
+                $template = 'templates.documents.clearance';
+                break;
+
+            case 'indigency':
+                $template = 'templates.documents.indigency';
+                break;
+
+            case 'residence':
+                $template = 'templates.documents.residence';
+                break;
+
+            case 'recognition':
+                $template = 'templates.documents.recognition';
+                break;
+
+            default:
+                // Fallback to clearance template if document type doesn't match
+                // This handles any unexpected document types gracefully
+                $template = 'templates.documents.clearance';
+                break;
+        }
+
+        // Note: If you add a new document type:
+        // 1. Add a case in this switch statement
+        // 2. Create the corresponding template file in resources/views/templates/documents/
+        // 3. Update the validation rules in store() method if needed
+
+        // Prepare data for the template
+        $data = [
+            'documentRequest' => $documentRequest,
+        ];
+
+        // Generate PDF
+        try {
+            $pdf = Pdf::loadView($template, $data);
+
+            // Set PDF options
+            $pdf->setPaper('A4', 'portrait');
+            $pdf->setOption('enable-local-file-access', true);
+
+            // Generate filename
+            $filename = str_replace(' ', '-', strtolower($documentRequest->document_type))
+                . '-' . $documentRequest->id
+                . '-' . date('Y-m-d')
+                . '.pdf';
+
+            // Return as download
+            return $pdf->download($filename);
+
+            // Alternative: Return as stream (opens in browser)
+            // return $pdf->stream($filename);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Error generating PDF: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+}
