@@ -12,6 +12,7 @@ class DocumentRequest extends Model
         'document_data',
         'document_status',
         'staff_message',
+        'requestor_message',
     ];
 
     protected $casts = [

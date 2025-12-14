@@ -10,7 +10,8 @@ class DocumentRequestController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'document_type' => 'required|string'
+            'document_type' => 'required|string|in:clearance,indigency,residence,recognition',
+            'message' => 'nullable|string|max:1000'
         ]);
 
         $user = $request->user();
@@ -20,12 +21,13 @@ class DocumentRequestController extends Controller
             'email' => $user->email,
             'phone' => $user->phone,
             'birthday' => $user->birthday,
-        ];  
+        ];
 
         $documentRequest = DocumentRequest::create([
             'user_id' => $user->id,
             'document_type' => $request->document_type,
             'document_data' => $documentData,
+            'requestor_message' => $request->input('message'),
         ]);
         return response()->json($documentRequest, 201);
     }
@@ -33,7 +35,7 @@ class DocumentRequestController extends Controller
     public function index(Request $request)
     {
         $user = $request->user();
-        
+
         // Requestors see only their requests, Staff/Admin see all
         if ($user->isRequestor()) {
             $documentRequests = DocumentRequest::where('user_id', $user->id)
@@ -46,7 +48,7 @@ class DocumentRequestController extends Controller
                 ->orderBy('created_at', 'desc')
                 ->get();
         }
-        
+
         return response()->json([
             'data' => $documentRequests,
             'message' => 'Document requests fetched successfully'
@@ -56,7 +58,7 @@ class DocumentRequestController extends Controller
     public function approve(Request $request)
     {
         $user = $request->user();
-        
+
         // Only staff can approve
         if (!$user->isStaff()) {
             return response()->json([
@@ -74,17 +76,17 @@ class DocumentRequestController extends Controller
             'document_status' => 'approved',
             'staff_message' => $request->input('message')
         ]);
-        
+
         return response()->json([
             'message' => 'Document request approved successfully',
             'data' => $documentRequest->load('user:id,name,email')
         ]);
-    }   
+    }
 
     public function reject(Request $request)
     {
         $user = $request->user();
-        
+
         // Only staff can reject
         if (!$user->isStaff()) {
             return response()->json([
@@ -102,7 +104,7 @@ class DocumentRequestController extends Controller
             'document_status' => 'rejected',
             'staff_message' => $request->input('message')
         ]);
-        
+
         return response()->json([
             'message' => 'Document request rejected successfully',
             'data' => $documentRequest->load('user:id,name,email')
@@ -112,7 +114,7 @@ class DocumentRequestController extends Controller
     public function overview(Request $request)
     {
         $user = $request->user();
-        
+
         // Only admin can see overview
         if (!$user->isAdmin()) {
             return response()->json([
@@ -142,5 +144,6 @@ class DocumentRequestController extends Controller
             'message' => 'Overview data fetched successfully'
         ]);
     }
+
 }
 

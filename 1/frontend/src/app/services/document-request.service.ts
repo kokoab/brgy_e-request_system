@@ -15,6 +15,7 @@ export interface DocumentRequest {
   };
   document_status: 'pending' | 'approved' | 'rejected';
   staff_message?: string | null;
+  requestor_message?: string | null;
   created_at: string;
   updated_at: string;
   user?: {
@@ -44,9 +45,10 @@ export class DocumentRequestService {
 
   constructor(private http: HttpClient) {}
 
-  createRequest(documentType: string): Observable<DocumentRequest> {
+  createRequest(documentType: string, message?: string): Observable<DocumentRequest> {
     return this.http.post<DocumentRequest>(`${this.apiUrl}/document-request`, {
-      document_type: documentType
+      document_type: documentType,
+      message: message || null
     });
   }
 

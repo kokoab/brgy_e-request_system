@@ -41,6 +41,10 @@
         </div>
       </div>
 
+      <div *ngIf="request.requestor_message" class="requestor-message">
+        <strong>Requestor Message:</strong> {{ request.requestor_message }}
+      </div>
+
       <div *ngIf="request.document_status === 'pending'" class="request-actions">
         <button 
           (click)="openApproveModal(request.id)" 
@@ -246,11 +250,25 @@
     color: #666;
   }
 
+  .requestor-message {
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+    padding: 0.75rem;
+    background: #e7f3ff;
+    border-left: 3px solid #007bff;
+    border-radius: 4px;
+    color: #495057;
+  }
+
+  .requestor-message strong {
+    color: #333;
+  }
+
   .staff-message {
     margin-top: 1rem;
     padding: 0.75rem;
     background: #f8f9fa;
-    border-left: 3px solid #007bff;
+    border-left: 3px solid #28a745;
     border-radius: 4px;
     color: #495057;
   }

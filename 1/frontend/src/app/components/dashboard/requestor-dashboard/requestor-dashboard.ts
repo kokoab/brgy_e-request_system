@@ -15,6 +15,8 @@ export class RequestorDashboardComponent implements OnInit {
   error = '';
   showRequestForm = false;
   documentType = '';
+  message = '';
+  documentTypes = ['clearance', 'indigency', 'residence', 'recognition'];
 
   constructor(private documentService: DocumentRequestService) {}
 
@@ -38,15 +40,16 @@ export class RequestorDashboardComponent implements OnInit {
 
   submitRequest(): void {
     if (!this.documentType.trim()) {
-      this.error = 'Please enter a document type';
+      this.error = 'Please select a document type';
       return;
     }
 
     this.loading = true;
     this.error = '';
-    this.documentService.createRequest(this.documentType).subscribe({
+    this.documentService.createRequest(this.documentType, this.message).subscribe({
       next: () => {
         this.documentType = '';
+        this.message = '';
         this.showRequestForm = false;
         this.loadRequests();
       },
