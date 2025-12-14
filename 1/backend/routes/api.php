@@ -18,10 +18,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/document-request', [DocumentRequestController::class, 'store']);
     Route::get('/document-requests', [DocumentRequestController::class, 'index']);
 
-    // Staff routes - only staff can approve/reject
+    // Staff routes - only staff can approve/reject and download documents
     Route::middleware('role:staff')->group(function () {
         Route::post('/document-request/approve', [DocumentRequestController::class, 'approve']);
         Route::post('/document-request/reject', [DocumentRequestController::class, 'reject']);
+        Route::get('/document-request/{id}/download', [DocumentRequestController::class, 'downloadPdf']);
     });
 
     // Admin routes - only admin can see overview

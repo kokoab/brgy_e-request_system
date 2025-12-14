@@ -159,54 +159,49 @@ class DocumentRequestController extends Controller
             ], 404);
         }
 
-        // Check authorization:
-        // - Requestor can only download their own approved documents
-        // - Staff and Admin can download any approved document
+        // Check authorization: Only staff and admin can download documents
+        // Requestors cannot download - only staff can
         $user = $request->user();
 
-        if ($user->isRequestor() && $documentRequest->user_id !== $user->id) {
+        if (!$user->isStaffOrAdmin()) {
             return response()->json([
-                'message' => 'You are not authorized to download this document'
+                'message' => 'Only staff members can download documents'
             ], 403);
         }
 
-        // Only allow download for approved documents
-        if ($documentRequest->document_status !== 'approved') {
-            return response()->json([
-                'message' => 'Document must be approved before downloading'
-            ], 400);
-        }
+        // Staff can download documents regardless of status (approved, pending, or rejected)
+        // No need to check document_status anymore
 
         // Determine template based on document type using switch statement
         // This allows different templates for different document types
-        // IMPORTANT: Make sure you create the template files before using them!
+        // IMPORTANT: Templates are in resources/views/templates/ folder
         switch (strtolower($documentRequest->document_type)) {
             case 'clearance':
-                $template = 'templates.documents.clearance';
+                $template = 'templates.clearance';
                 break;
 
             case 'indigency':
-                $template = 'templates.documents.indigency';
+                $template = 'templates.indigency';
                 break;
 
             case 'residence':
-                $template = 'templates.documents.residence';
+                $template = 'templates.residence';
                 break;
 
             case 'recognition':
-                $template = 'templates.documents.recognition';
+                $template = 'templates.recognition';
                 break;
 
             default:
                 // Fallback to clearance template if document type doesn't match
                 // This handles any unexpected document types gracefully
-                $template = 'templates.documents.clearance';
+                $template = 'templates.clearance';
                 break;
         }
 
         // Note: If you add a new document type:
         // 1. Add a case in this switch statement
-        // 2. Create the corresponding template file in resources/views/templates/documents/
+        // 2. Create the corresponding template file in resources/views/templates/
         // 3. Update the validation rules in store() method if needed
 
         // Prepare data for the template

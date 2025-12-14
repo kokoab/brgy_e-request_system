@@ -1,7 +1,11 @@
 <div class="requestor-dashboard">
   <h2>My Document Requests</h2>
 
-  <button *ngIf="!showRequestForm" (click)="showRequestForm = true" class="btn-primary">
+  <button
+    *ngIf="!showRequestForm"
+    (click)="showRequestForm = true"
+    class="btn-primary"
+  >
     + New Request
   </button>
 
@@ -9,39 +13,32 @@
     <h3>Create New Document Request</h3>
     <div class="form-group">
       <label>Document Type:</label>
-      <select 
-        [(ngModel)]="documentType" 
+      <input
+        type="text"
+        [(ngModel)]="documentType"
+        placeholder="e.g., Clearance, Certificate, etc."
         class="form-control"
-        required
-      >
-        <option value="">-- Select Document Type --</option>
-        <option *ngFor="let type of documentTypes" [value]="type">
-          {{ type | titlecase }}
-        </option>
-      </select>
-    </div>
-    <div class="form-group">
-      <label>Message (Optional):</label>
-      <textarea 
-        [(ngModel)]="message" 
-        placeholder="Add any additional information or notes..."
-        class="form-control"
-        rows="4"
-        maxlength="1000"
-      ></textarea>
-      <small class="form-help">{{ (message || '').length }}/1000 characters</small>
+      />
     </div>
     <div class="form-actions">
-      <button (click)="submitRequest()" [disabled]="loading" class="btn-primary">
+      <button
+        (click)="submitRequest()"
+        [disabled]="loading"
+        class="btn-primary"
+      >
         {{ loading ? 'Submitting...' : 'Submit Request' }}
       </button>
-      <button (click)="showRequestForm = false" class="btn-secondary">Cancel</button>
+      <button (click)="showRequestForm = false" class="btn-secondary">
+        Cancel
+      </button>
     </div>
   </div>
 
   <div *ngIf="error" class="error-message">{{ error }}</div>
 
-  <div *ngIf="loading && !documentRequests.length" class="loading">Loading...</div>
+  <div *ngIf="loading && !documentRequests.length" class="loading">
+    Loading...
+  </div>
 
   <div *ngIf="!loading && documentRequests.length === 0" class="empty-state">
     <p>No document requests yet. Create your first request!</p>
@@ -51,23 +48,25 @@
     <div *ngFor="let request of documentRequests" class="request-card">
       <div class="request-header">
         <h3>{{ request.document_type }}</h3>
-        <span [class]="'status-badge ' + getStatusClass(request.document_status)">
+        <span
+          [class]="'status-badge ' + getStatusClass(request.document_status)"
+        >
           {{ request.document_status }}
         </span>
       </div>
       <div class="request-details">
-        <p><strong>Requested:</strong> {{ request.created_at | date:'short' }}</p>
+        <p>
+          <strong>Requested:</strong> {{ request.created_at | date:'short' }}
+        </p>
         <p *ngIf="request.document_status !== 'pending'">
           <strong>Updated:</strong> {{ request.updated_at | date:'short' }}
         </p>
       </div>
 
-      <div *ngIf="request.requestor_message" class="requestor-message">
-        <strong>Your Message:</strong> {{ request.requestor_message }}
-      </div>
       <div *ngIf="request.staff_message" class="staff-message">
         <strong>Staff Message:</strong> {{ request.staff_message }}
       </div>
+
     </div>
   </div>
 </div>
@@ -112,11 +111,36 @@
     margin-left: 0.5rem;
   }
 
+  /* ADD THIS: Download Button Styles */
+  .btn-download {
+    background: #28a745;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    margin-top: 1rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: background 0.2s;
+  }
+
+  .btn-download:hover:not(:disabled) {
+    background: #218838;
+  }
+
+  .btn-download:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
   .request-form {
     background: white;
     padding: 1.5rem;
     border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     margin-bottom: 2rem;
   }
 
@@ -137,28 +161,6 @@
     border: 1px solid #ddd;
     border-radius: 4px;
     font-size: 1rem;
-  }
-
-  .form-control:focus {
-    outline: none;
-    border-color: #007bff;
-    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
-  }
-
-  select.form-control {
-    cursor: pointer;
-  }
-
-  textarea.form-control {
-    resize: vertical;
-    font-family: inherit;
-  }
-
-  .form-help {
-    display: block;
-    margin-top: 0.25rem;
-    color: #666;
-    font-size: 0.875rem;
   }
 
   .form-actions {
@@ -183,7 +185,7 @@
     background: white;
     padding: 1.5rem;
     border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   }
 
   .request-header {
@@ -226,6 +228,13 @@
     font-size: 0.9rem;
   }
 
+  /* ADD THIS: Request Actions Container */
+  .request-actions {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid #eee;
+  }
+
   .empty-state {
     text-align: center;
     padding: 3rem;
@@ -238,24 +247,11 @@
     color: #666;
   }
 
-  .requestor-message {
-    margin-top: 1rem;
-    padding: 0.75rem;
-    background: #e7f3ff;
-    border-left: 3px solid #007bff;
-    border-radius: 4px;
-    color: #495057;
-  }
-
-  .requestor-message strong {
-    color: #333;
-  }
-
   .staff-message {
     margin-top: 1rem;
     padding: 0.75rem;
     background: #f8f9fa;
-    border-left: 3px solid #28a745;
+    border-left: 3px solid #007bff;
     border-radius: 4px;
     color: #495057;
   }

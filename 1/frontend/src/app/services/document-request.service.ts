@@ -59,7 +59,7 @@ export class DocumentRequestService {
   approveRequest(documentRequestId: number, message?: string): Observable<{ message: string; data: DocumentRequest }> {
     return this.http.post<{ message: string; data: DocumentRequest }>(
       `${this.apiUrl}/document-request/approve`,
-      { 
+      {
         document_request_id: documentRequestId,
         message: message || null
       }
@@ -69,12 +69,21 @@ export class DocumentRequestService {
   rejectRequest(documentRequestId: number, message?: string): Observable<{ message: string; data: DocumentRequest }> {
     return this.http.post<{ message: string; data: DocumentRequest }>(
       `${this.apiUrl}/document-request/reject`,
-      { 
+      {
         document_request_id: documentRequestId,
         message: message || null
       }
     );
   }
+
+  downloadPdf(documentRequestId:number): Observable<Blob> {
+    return this.http.get(
+      `${this.apiUrl}/document-request/${documentRequestId}/download`,{
+        responseType: 'blob',
+      }
+    )
+  }
+
 
   getOverview(): Observable<{
     stats: OverviewStats;

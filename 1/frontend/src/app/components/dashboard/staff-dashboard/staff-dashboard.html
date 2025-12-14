@@ -65,6 +65,18 @@
       <div *ngIf="request.staff_message && request.document_status !== 'pending'" class="staff-message">
         <strong>Staff Message:</strong> {{ request.staff_message }}
       </div>
+
+      <!-- Download Button - Staff can download any document (pending, approved, or rejected) -->
+      <div class="request-actions" style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #eee;">
+        <button
+          (click)="downloadDocument(request.id)"
+          [disabled]="downloadingId === request.id"
+          class="btn-download"
+        >
+          <span *ngIf="downloadingId !== request.id">📥 Download PDF</span>
+          <span *ngIf="downloadingId === request.id">⏳ Downloading...</span>
+        </button>
+      </div>
     </div>
   </div>
 

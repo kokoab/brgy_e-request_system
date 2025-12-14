@@ -14,6 +14,7 @@ export class StaffDashboardComponent implements OnInit {
   loading = false;
   error = '';
   success = '';
+  downloadingId: number | null = null; // Track which document is downloading
   
   // Modal state
   showModal = false;
@@ -99,5 +100,58 @@ export class StaffDashboardComponent implements OnInit {
       case 'rejected': return 'status-rejected';
       default: return 'status-pending';
     }
+  }
+
+  /**
+   * Download PDF document for any request (staff can download all, regardless of status)
+   * @param documentRequestId The ID of the document request to download
+   */
+  downloadDocument(documentRequestId: number): void {
+    // Set downloading state
+    this.downloadingId = documentRequestId;
+    this.error = '';
+
+    this.documentService.downloadPdf(documentRequestId).subscribe({
+      next: (blob: Blob) => {
+        // Create a temporary URL for the blob
+        const url = window.URL.createObjectURL(blob);
+        
+        // Create a temporary anchor element
+        const link = document.createElement('a');
+        link.href = url;
+        
+        // Generate filename from blob or use default
+        const filename = `document-${documentRequestId}-${new Date().getTime()}.pdf`;
+        link.download = filename;
+        
+        // Append to body, click, then remove
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        // Clean up the temporary URL
+        window.URL.revokeObjectURL(url);
+        
+        // Reset downloading state
+        this.downloadingId = null;
+      },
+      error: (err) => {
+        console.error('Download failed:', err);
+        this.error = err.error?.message || 'Failed to download document';
+        this.downloadingId = null;
+        
+        // Handle blob error (if backend returns JSON error in blob)
+        if (err.error instanceof Blob) {
+          err.error.text().then((text: string) => {
+            try {
+              const errorObj = JSON.parse(text);
+              this.error = errorObj.message || 'Failed to download document';
+            } catch {
+              this.error = 'Failed to download document';
+            }
+          });
+        }
+      }
+    });
   }
 }
